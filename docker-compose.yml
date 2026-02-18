@@ -1,0 +1,17 @@
+services:
+
+  app:
+    build: .
+    restart: always
+    ports:
+      - 50056:50056
+  mongodb:
+    image: mongo:4.4
+    container_name: db
+    restart: always
+    ports:
+      - 27017:27017
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=wallets
+      - MONGO_INITDB_ROOT_PASSWORD=wallets
+
