@@ -54,3 +54,8 @@ type ParamGetByAccountOutput struct {
 	CreatedAT time.Time
 	UpdatedAT time.Time
 }
+
+type ParamRegisterTransaction struct {
+	ReferenceId string
+	CreatedAt   time.Time
+}

@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/aclgo/balance/entity"
@@ -12,11 +13,14 @@ import (
 )
 
 type MongoRepository struct {
-	collection *mongo.Collection
+	collection            *mongo.Collection
+	transactionCollection *mongo.Collection
 }
 
-func NewMongoRepository(collection *mongo.Collection) entity.EntityRepository {
-	return &MongoRepository{collection: collection}
+func NewMongoRepository(collection *mongo.Collection, transactionCollection *mongo.Collection) entity.EntityRepository {
+	return &MongoRepository{collection: collection,
+		transactionCollection: transactionCollection,
+	}
 }
 
 func (m *MongoRepository) Create(ctx context.Context, param *entity.ParamCreate,
@@ -148,4 +152,32 @@ func (m *MongoRepository) GetByAccount(ctx context.Context, param *entity.ParamG
 	}
 
 	return &out, nil
+}
+
+func (m *MongoRepository) RegisterTransaction(ctx context.Context, param *entity.ParamRegisterTransaction) error {
+	tx := bson.M{
+		"reference_id": param.ReferenceId,
+		"created_at":   param.CreatedAt,
+	}
+
+	_, err := m.transactionCollection.InsertOne(ctx, tx)
+	if mongo.IsDuplicateKeyError(err) {
+		return errors.New("transaction already processed")
+	}
+
+	return err
+}
+
+func (m *MongoRepository) EnsureIndexes(ctx context.Context) error {
+	indexModel := mongo.IndexModel{
+		Keys:    bson.D{{Key: "reference_id", Value: 1}},
+		Options: options.Index().SetUnique(true),
+	}
+
+	_, err := m.transactionCollection.Indexes().CreateOne(ctx, indexModel)
+	if err != nil {
+		return fmt.Errorf("m.transactionCollection.Indexes().CreateOne: %w", err)
+	}
+
+	return nil
 }

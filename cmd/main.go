@@ -45,8 +45,12 @@ func main() {
 	}()
 
 	collection := client.Database(cfg.DbName).Collection(cfg.DbCollection)
+	collectionTransactions := client.Database(cfg.DbName).Collection("transactions")
 
-	repo := repository.NewMongoRepository(collection)
+	repo := repository.NewMongoRepository(collection, collectionTransactions)
+	if err := repo.EnsureIndexes(ctx); err != nil {
+		log.Fatalf("repo.EnsureIndexes: %w", err)
+	}
 
 	mu := sync.Mutex{}
 
@@ -54,8 +58,9 @@ func main() {
 	creditUC := usecase.NewWalletCreditUC(repo, &mu)
 	debitUC := usecase.NewWalletDebitUC(repo, &mu)
 	getByAccountUC := usecase.NewWalletGetByAccountUC(repo)
+	createTransaction := usecase.NewRegisterTransactionUC(repo)
 
-	svcGRPC := service.NewGrpcService(createUC, creditUC, debitUC, getByAccountUC)
+	svcGRPC := service.NewGrpcService(createUC, creditUC, debitUC, getByAccountUC, createTransaction)
 
 	listen, err := net.Listen("tcp", ":50056")
 
