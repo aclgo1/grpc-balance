@@ -8,6 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type MongoRepository struct {
@@ -63,10 +64,18 @@ func (m *MongoRepository) Update(ctx context.Context, param *entity.ParamUpdate,
 		return nil, fmt.Errorf("primitive.ObjectIDFromHex: %w", err)
 	}
 
-	filter := bson.M{"_id": id}
+	filter := bson.M{
+		"_id": id,
+	}
+
+	if param.Balance < 0 {
+		requiredBalance := param.Balance * -1
+		filter["balance"] = bson.M{"$gte": requiredBalance}
+	}
 
 	update := bson.M{
-		"$set": bson.M{"balance": param.Balance, "updated_at": param.UpdatedAT},
+		"$set": bson.M{"updated_at": param.UpdatedAT},
+		"$inc": bson.M{"balance": param.Balance},
 	}
 
 	res, err := m.collection.UpdateOne(ctx, filter, update)
@@ -79,11 +88,20 @@ func (m *MongoRepository) Update(ctx context.Context, param *entity.ParamUpdate,
 	}
 
 	pout := paramRepositoryMongoOutput{}
+	opts := options.FindOneAndUpdate().SetReturnDocument(options.After)
 
-	if err := m.collection.FindOne(ctx, filter).Decode(&pout); err != nil {
-		return nil, fmt.Errorf("m.collection.FindOne: %w", err)
+	err = m.collection.FindOneAndUpdate(ctx, filter, update, opts).Decode(&pout)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, fmt.Errorf("m.collection.FindOneAndUpdate: wallet not searched %w", err)
+		}
+
+		return nil, fmt.Errorf("m.collection.FindOneAndUpdate: %w", err)
 	}
 
+	if res.MatchedCount == 0 {
+		return nil, fmt.Errorf("wallet no searched")
+	}
 	out := entity.ParamUpdateOutput{
 		WalletID:  pout.WalletID.Hex(),
 		AccountID: pout.AccountID,

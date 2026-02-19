@@ -51,27 +51,10 @@ type ParamDebitOutput struct {
 
 func (u *WalletDebitUC) Execute(ctx context.Context, in *ParamDebitInput,
 ) (*ParamDebitOutput, error) {
-	u.mu.Lock()
-	defer u.mu.Unlock()
-
-	entityParamGet := entity.ParamGet{
-		WalletID: in.WalletID,
-	}
-
-	oldWallet, err := u.repo.Get(ctx, &entityParamGet)
-	if err != nil {
-		return nil, fmt.Errorf("u.repo.Get: %w", err)
-	}
-
-	if oldWallet.Balance < in.Amount {
-		return nil, fmt.Errorf("invalid transaction balance is %.2f debit %.2f", oldWallet.Balance, in.Amount)
-	}
-
-	newBalance := oldWallet.Balance - in.Amount
 
 	entityParamUpdate := entity.ParamUpdate{
-		WalletID:  oldWallet.WalletID,
-		Balance:   newBalance,
+		WalletID:  in.WalletID,
+		Balance:   -in.Amount,
 		UpdatedAT: time.Now(),
 	}
 

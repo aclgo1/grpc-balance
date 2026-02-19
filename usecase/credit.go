@@ -51,23 +51,10 @@ type ParamCreditOutput struct {
 
 func (u *WalletCreditUC) Execute(ctx context.Context, in *ParamCreditInput,
 ) (*ParamCreditOutput, error) {
-	u.mu.Lock()
-	defer u.mu.Unlock()
-
-	entityParamGet := entity.ParamGet{
-		WalletID: in.WalletID,
-	}
-
-	oldWallet, err := u.repo.Get(ctx, &entityParamGet)
-	if err != nil {
-		return nil, fmt.Errorf("u.repo.Get: %w", err)
-	}
-
-	newBalance := oldWallet.Balance + in.Amount
 
 	entityParamUpdate := entity.ParamUpdate{
-		WalletID:  oldWallet.WalletID,
-		Balance:   newBalance,
+		WalletID:  in.WalletID,
+		Balance:   in.Amount,
 		UpdatedAT: time.Now(),
 	}
 
