@@ -78,15 +78,6 @@ func (m *MongoRepository) Update(ctx context.Context, param *entity.ParamUpdate,
 		"$inc": bson.M{"balance": param.Balance},
 	}
 
-	res, err := m.collection.UpdateOne(ctx, filter, update)
-	if err != nil {
-		return nil, fmt.Errorf("m.collection.UpdateOne: %w", err)
-	}
-
-	if res.MatchedCount == 0 {
-		return nil, fmt.Errorf("wallet no searched")
-	}
-
 	pout := paramRepositoryMongoOutput{}
 	opts := options.FindOneAndUpdate().SetReturnDocument(options.After)
 
@@ -99,9 +90,6 @@ func (m *MongoRepository) Update(ctx context.Context, param *entity.ParamUpdate,
 		return nil, fmt.Errorf("m.collection.FindOneAndUpdate: %w", err)
 	}
 
-	if res.MatchedCount == 0 {
-		return nil, fmt.Errorf("wallet no searched")
-	}
 	out := entity.ParamUpdateOutput{
 		WalletID:  pout.WalletID.Hex(),
 		AccountID: pout.AccountID,
