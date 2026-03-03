@@ -24,7 +24,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	clientOptions := options.Client().ApplyURI(cfg.DbUrl)
+	clientOptions := options.Client().ApplyURI(cfg.DbUrl).SetMaxPoolSize(20).SetMinPoolSize(5)
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 	defer cancel()
@@ -49,7 +49,7 @@ func main() {
 
 	repo := repository.NewMongoRepository(collection, collectionTransactions)
 	if err := repo.EnsureIndexes(ctx); err != nil {
-		log.Fatalf("repo.EnsureIndexes: %w", err)
+		log.Fatalf("repo.EnsureIndexes: %v", err)
 	}
 
 	mu := sync.Mutex{}
