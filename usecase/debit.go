@@ -34,9 +34,9 @@ func (p *ParamDebitInput) Validate() error {
 		return errors.New("invalid object id")
 	}
 
-	if p.Amount <= 0 {
-		return fmt.Errorf("amount is %v", p.Amount)
-	}
+	// if p.Amount <= 0 {
+	// 	return fmt.Errorf("amount is %v", p.Amount)
+	// }
 
 	return nil
 }
