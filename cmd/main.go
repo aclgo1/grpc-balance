@@ -9,6 +9,7 @@ import (
 
 	"github.com/aclgo/balance/config"
 	"github.com/aclgo/balance/infra/delivery/grpc/service"
+	"github.com/aclgo/balance/infra/grpc_auth"
 	"github.com/aclgo/balance/infra/repository"
 	"github.com/aclgo/balance/proto"
 	"github.com/aclgo/balance/usecase"
@@ -64,7 +65,13 @@ func main() {
 
 	listen, err := net.Listen("tcp", ":50056")
 
-	server := grpc.NewServer()
+	auth := grpc_auth.NewGrpcAuth(cfg)
+
+	opts := []grpc.ServerOption{
+		grpc.ChainUnaryInterceptor(auth.AuthInterceptor),
+	}
+
+	server := grpc.NewServer(opts...)
 
 	proto.RegisterWalletServiceServer(server, svcGRPC)
 
