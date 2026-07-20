@@ -6,21 +6,22 @@ import (
 	"github.com/spf13/viper"
 )
 
-type config struct {
-	Path         string
-	ApiPort      string `mapstructure:"API_PORT"`
-	DbUrl        string `mapstructure:"DB_URL"`
-	DbName       string `mapstructure:"DB_NAME"`
-	DbCollection string `mapstructure:"DB_COLLECTION"`
+type Config struct {
+	Path          string
+	ApiPort       string `mapstructure:"API_PORT"`
+	DbUrl         string `mapstructure:"DB_URL"`
+	DbName        string `mapstructure:"DB_NAME"`
+	DbCollection  string `mapstructure:"DB_COLLECTION"`
+	PathPublicPem string `mapstructure:"PATH_PUBLIC_PEM"`
 }
 
-func NewConfig(path string) *config {
-	return &config{
+func NewConfig(path string) *Config {
+	return &Config{
 		Path: path,
 	}
 }
 
-func (c *config) Load() error {
+func (c *Config) Load() error {
 	v := viper.New()
 
 	v.AddConfigPath(c.Path)
