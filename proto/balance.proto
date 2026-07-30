@@ -11,7 +11,7 @@ message ParamCreateWalletRequest {
 message ParamCreateWalletResponse {
     string walletID = 1;
     string accountID = 2;
-    double balance = 3;
+    int64 balance = 3;
     google.protobuf.Timestamp createdAT = 4;
     google.protobuf.Timestamp updatedAT = 5;
 }
@@ -24,7 +24,7 @@ message ParamCreditWalletRequest {
 message ParamCreditWalletResponse {
     string walletID = 1;
     string accountID = 2;
-    double balance = 3;
+    int64 balance = 3;
     google.protobuf.Timestamp createdAT = 4;
     google.protobuf.Timestamp updatedAT = 5;
 }
@@ -37,7 +37,7 @@ message ParamDebitWalletRequest {
 message ParamDebitWalletResponse {
     string walletID = 1;
     string accountID = 2;
-    double balance = 3;
+    int64 balance = 3;
     google.protobuf.Timestamp createdAT = 4;
     google.protobuf.Timestamp updatedAT = 5;
 }
@@ -49,7 +49,7 @@ message ParamGetWalletByAccountRequest {
 message ParamgGetWalletByAccountResponse {
     string walletID = 1;
     string accountID = 2;
-    double balance = 3;
+    int64 balance = 3;
     google.protobuf.Timestamp createdAT = 4;
     google.protobuf.Timestamp updatedAT = 5;
 }

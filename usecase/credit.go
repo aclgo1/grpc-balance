@@ -22,7 +22,8 @@ func NewWalletCreditUC(repo entity.EntityRepository, mu *sync.Mutex) *WalletCred
 
 type ParamCreditInput struct {
 	WalletID string
-	Amount   float64
+	ReferenceId string
+	Amount   int64
 }
 
 func (p *ParamCreditInput) Validate() error {
@@ -32,6 +33,10 @@ func (p *ParamCreditInput) Validate() error {
 
 	if _, err := primitive.ObjectIDFromHex(p.WalletID); err != nil {
 		return errors.New("invalid object id")
+	}
+
+	if p.ReferenceId == ""{
+		return errors.New("reference id empty")
 	}
 
 	if p.Amount <= 0 {
@@ -44,7 +49,7 @@ func (p *ParamCreditInput) Validate() error {
 type ParamCreditOutput struct {
 	WalletID  string
 	AccountID string
-	Balance   float64
+	Balance   int64
 	CreatedAT time.Time
 	UpdatedAT time.Time
 }

@@ -22,6 +22,7 @@ func NewWalletDebitUC(repo entity.EntityRepository, mu *sync.Mutex) *WalletDebit
 
 type ParamDebitInput struct {
 	WalletID string
+	ReferenceId string
 	Amount   float64
 }
 
@@ -34,9 +35,13 @@ func (p *ParamDebitInput) Validate() error {
 		return errors.New("invalid object id")
 	}
 
-	// if p.Amount <= 0 {
-	// 	return fmt.Errorf("amount is %v", p.Amount)
-	// }
+	if p.ReferenceId == ""{
+		return errors.New("reference id empty")
+	}
+
+	if p.Amount <= 0 {
+		return fmt.Errorf("amount is %v", p.Amount)
+	}
 
 	return nil
 }
@@ -44,7 +49,7 @@ func (p *ParamDebitInput) Validate() error {
 type ParamDebitOutput struct {
 	WalletID  string
 	AccountID string
-	Balance   float64
+	Balance int64
 	CreatedAT time.Time
 	UpdatedAT time.Time
 }

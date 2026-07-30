@@ -37,7 +37,7 @@ func (p *ParamGetByAccountInput) Validate() error {
 type ParamGetByAccountOutput struct {
 	WalletID  string
 	AccountID string
-	Balance   float64
+	Balance   int64
 	CreatedAT time.Time
 	UpdatedAT time.Time
 }

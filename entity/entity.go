@@ -1,6 +1,8 @@
 package entity
 
-import "context"
+import (
+	"context"
+)
 
 type EntityRepository interface {
 	Create(context.Context, *ParamCreate) (*ParamCreateOutput, error)
@@ -9,6 +11,7 @@ type EntityRepository interface {
 	GetByAccount(context.Context, *ParamGetByAccount) (*ParamGetByAccountOutput, error)
 	ProcessLedgerEntry(ctx context.Context, param *ParamLedgerEntry) (*ParamUpdateOutput, error)
 	AuditWallet(ctx context.Context, param *ParamAuditWallet)(*AuditReport,error)
+	ReconcileWallet(ctx context.Context, param *ParamReconcile)error
 	EnsureIndexes(ctx context.Context) error
 	// RegisterTransaction(ctx context.Context, param *ParamRegisterTransaction) error
 }
