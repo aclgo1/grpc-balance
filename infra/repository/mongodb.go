@@ -4,12 +4,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/aclgo/balance/entity"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo/readconcern"
+	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
 type MongoRepository struct {
@@ -154,19 +157,193 @@ func (m *MongoRepository) GetByAccount(ctx context.Context, param *entity.ParamG
 	return &out, nil
 }
 
-func (m *MongoRepository) RegisterTransaction(ctx context.Context, param *entity.ParamRegisterTransaction) error {
-	tx := bson.M{
-		"reference_id": param.ReferenceId,
-		"created_at":   param.CreatedAt,
+func(m *MongoRepository)ProcessLedgerEntry(ctx context.Context, param *entity.ParamLedgerEntry) (*entity.ParamUpdateOutput, error){
+	session,err := m.collection.Database().Client().StartSession()
+	if err != nil {
+		return nil, fmt.Errorf("start session: %w",err)
 	}
 
-	_, err := m.transactionCollection.InsertOne(ctx, tx)
-	if mongo.IsDuplicateKeyError(err) {
-		return errors.New("transaction already processed")
+	defer session.EndSession(ctx)
+
+	var pout paramRepositoryMongoOutput
+
+	callback := func(sessCtx mongo.SessionContext)(any,error){
+		id, err := primitive.ObjectIDFromHex(param.WalletId)
+		if err != nil {
+			return nil,err
+		}
+
+		tx := bson.M{
+			"reference_id": param.ReferenceId,
+			"wallet_id":    id,
+			"amount":       param.Amount,
+			"created_at":   param.CreatedAt,
+		}
+
+		_,err = m.transactionCollection.InsertOne(sessCtx,tx)
+		if err != nil {
+			if mongo.IsDuplicateKeyError(err){
+				return nil, errors.New("transaction already processed")
+			}
+
+			return nil, fmt.Errorf("insert ledger entry: %w", err)
+		}
+
+		filter := bson.M{"_id":id}
+		if param.Amount < 0{
+			requiredBalance := param.Amount *-1
+			filter["balance"] = bson.M{"$gte":requiredBalance}
+		}
+
+		update := bson.M{
+			"$set": bson.M{"updated_at": param.CreatedAt},
+			"$inc": bson.M{"balance": param.Amount},
+		}
+
+		opts := options.FindOneAndUpdate().SetReturnDocument(options.After)
+		err = m.collection.FindOneAndUpdate(sessCtx, filter,update,opts).Decode(pout)
+		if err != nil {
+			if err == mongo.ErrNoDocuments{
+				return nil, fmt.Errorf("insufficient funds or wallet not found")
+			}
+
+			return nil,err
+		}
+		return nil,nil
 	}
 
-	return err
+	_, err = session.WithTransaction(ctx, callback)
+	if err != nil {
+		return nil, err
+	}
+
+	out := entity.ParamUpdateOutput{
+		WalletID:  pout.WalletID.Hex(),
+		AccountID: pout.AccountID,
+		Balance:   pout.Balance,
+		CreatedAT: pout.CreatedAT,
+		UpdatedAT: pout.UpdatedAT,
+	}
+
+	return &out,nil
 }
+
+func(m *MongoRepository) AuditWallet(ctx context.Context, param *entity.ParamAuditWallet)(*entity.AuditReport,error){
+	client := m.collection.Database().Client()
+	session, err := client.StartSession()
+	if err != nil {
+		return nil, fmt.Errorf("error init session mongodb: %w",err)
+	}
+
+	defer session.EndSession(ctx)
+
+	txnOpts := options.Transaction().SetReadConcern(readconcern.Snapshot()).
+	SetReadPreference(readpref.Primary())
+
+	var report entity.AuditReport
+
+	callback := func(sessCtx mongo.SessionContext)(any,error){
+		objId,err := primitive.ObjectIDFromHex(param.WalletId)
+		if err != nil {
+			return nil, fmt.Errorf("id wallet invalid: %w",err)
+		}
+
+		var wallet WalletDocument
+		err = m.collection.FindOne(sessCtx, bson.M{"_id": objId}).Decode(&wallet)
+		if err != nil {
+			if errors.Is(err, mongo.ErrNoDocuments){
+				return nil, fmt.Errorf("wallet not searched: %w",err)
+			}
+
+			return nil, fmt.Errorf("error read wallet: %w",err)
+		}
+
+		matchStage := bson.D{{Key: "$match", Value: bson.D{{Key: "wallet_id", Value: objId}}}}
+		groupStage := bson.D{{Key: "$group", Value: bson.D{
+			{Key: "_id", Value: nil},
+			{Key: "total", Value: bson.D{{Key: "$sum", Value: "$amount"}}},
+		}}}	
+
+		cursor, err := m.transactionCollection.Aggregate(sessCtx, mongo.Pipeline{matchStage, groupStage})
+		if err != nil {
+			return nil, fmt.Errorf("error calculate sum ledger: %w",err)
+		}
+
+		defer cursor.Close(sessCtx)
+
+		var ledgerTotal int64 = 0 
+		if cursor.Next(sessCtx){
+			var sumResult LedgerSumResult
+			if err := cursor.Decode(&sumResult); err != nil {
+				return nil, fmt.Errorf("error decodify sum ledger: %w",err)
+			}
+
+			ledgerTotal = sumResult.Total
+		}
+
+		diff := wallet.Balance - ledgerTotal
+		report = entity.AuditReport{
+			WalletID:      param.WalletId,
+			WalletBalance: wallet.Balance,
+			LedgerTotal:   ledgerTotal,
+			Difference:    diff,
+			IsConsistent:  diff == 0,
+		}
+
+		return nil,nil
+	}
+
+	_,err = session.WithTransaction(ctx, callback,txnOpts)
+	if err != nil{
+		return nil, fmt.Errorf("failed transaction auditory: %w",err)
+	}
+
+	return &report,nil
+
+}
+
+func (m *MongoRepository)ReconcileWallet(ctx context.Context, param *entity.ParamReconcile)error{
+	report, err := m.AuditWallet(ctx,&entity.ParamAuditWallet{WalletId: param.WalletId})
+	if err != nil {
+		return fmt.Errorf("failed audit to reconcile: %w",err)
+	}
+
+	if report.IsConsistent{
+		return nil
+	}
+
+	adjustmentAmount := -report.Difference
+
+	refID := fmt.Sprintf("RECONCILE_%s_%s_%d", param.WalletId,param.Operator, time.Now().UnixNano())
+	
+	entry := &entity.ParamLedgerEntry{
+		ReferenceId: refID,
+		WalletId:    param.WalletId,
+		Amount:      adjustmentAmount, 
+		CreatedAt:   time.Now(),
+	}
+
+	_, err = m.ProcessLedgerEntry(ctx,entry)
+	if err != nil {
+		return fmt.Errorf("error aplicate reconcile: %w",err)
+	}
+
+	return nil
+}
+
+// func (m *MongoRepository) RegisterTransaction(ctx context.Context, param *entity.ParamRegisterTransaction) error {
+// 	tx := bson.M{
+// 		"reference_id": param.ReferenceId,
+// 		"created_at":   param.CreatedAt,
+// 	}
+
+// 	_, err := m.transactionCollection.InsertOne(ctx, tx)
+// 	if mongo.IsDuplicateKeyError(err) {
+// 		return errors.New("transaction already processed")
+// 	}
+
+// 	return err
+// }
 
 func (m *MongoRepository) EnsureIndexes(ctx context.Context) error {
 	indexModel := mongo.IndexModel{

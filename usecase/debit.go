@@ -52,13 +52,13 @@ type ParamDebitOutput struct {
 func (u *WalletDebitUC) Execute(ctx context.Context, in *ParamDebitInput,
 ) (*ParamDebitOutput, error) {
 
-	entityParamUpdate := entity.ParamUpdate{
-		WalletID:  in.WalletID,
-		Balance:   -in.Amount,
-		UpdatedAT: time.Now(),
+	entityParamLedgerEntry := entity.ParamLedgerEntry{
+		WalletId:  in.WalletID,
+		Amount:   int64(-in.Amount),
+		CreatedAt: time.Now(),
 	}
 
-	updatedWallet, err := u.repo.Update(ctx, &entityParamUpdate)
+	updatedWallet, err := u.repo.ProcessLedgerEntry(ctx, &entityParamLedgerEntry)
 	if err != nil {
 		return nil, fmt.Errorf("u.repo.Update: %w", err)
 	}

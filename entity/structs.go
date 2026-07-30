@@ -59,3 +59,29 @@ type ParamRegisterTransaction struct {
 	ReferenceId string
 	CreatedAt   time.Time
 }
+
+type ParamLedgerEntry struct{
+	WalletId string
+	ReferenceId string
+	Amount int64
+	CreatedAt time.Time
+}
+
+type ParamAuditWallet struct {
+	WalletId string
+}
+
+type AuditReport struct {
+	WalletID      string 
+	WalletBalance int64  
+	LedgerTotal   int64  
+	Difference    int64  
+	IsConsistent  bool  
+}
+
+type ParamReconcile struct {
+	WalletId string
+	Reason string
+	Operator string
+}
+

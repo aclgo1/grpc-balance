@@ -21,3 +21,14 @@ type paramRepositoryMongoOutput struct {
 	CreatedAT time.Time          `bson:"created_at"`
 	UpdatedAT time.Time          `bson:"updated_at"`
 }
+
+
+
+type WalletDocument struct {
+	ID      primitive.ObjectID `bson:"_id"`
+	Balance int64              `bson:"balance"` 
+}
+
+type LedgerSumResult struct {
+	Total int64 `bson:"total"`
+}

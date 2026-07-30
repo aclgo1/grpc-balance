@@ -59,9 +59,9 @@ func main() {
 	creditUC := usecase.NewWalletCreditUC(repo, &mu)
 	debitUC := usecase.NewWalletDebitUC(repo, &mu)
 	getByAccountUC := usecase.NewWalletGetByAccountUC(repo)
-	createTransaction := usecase.NewRegisterTransactionUC(repo)
+	// createTransaction := usecase.NewRegisterTransactionUC(repo)
 
-	svcGRPC := service.NewGrpcService(createUC, creditUC, debitUC, getByAccountUC, createTransaction)
+	svcGRPC := service.NewGrpcService(createUC, creditUC, debitUC, getByAccountUC)
 
 	listen, err := net.Listen("tcp", ":50056")
 

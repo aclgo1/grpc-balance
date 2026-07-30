@@ -13,6 +13,8 @@ COPY --from=builder /app/grpc-wallet ./
 
 COPY --from=builder /app/.env ./ 
 
+COPY --from=builder /app/certs ./certs
+
 EXPOSE 50056
 
 ENTRYPOINT ["./grpc-wallet"]

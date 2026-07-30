@@ -6,8 +6,6 @@ import (
 
 	"github.com/aclgo/balance/proto"
 	"github.com/aclgo/balance/usecase"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -16,7 +14,7 @@ type GrpcService struct {
 	CreditUC            *usecase.WalletCreditUC
 	DebitUC             *usecase.WalletDebitUC
 	GetByAccountUC      *usecase.WalletGetByAccountUC
-	RegisterTransaction *usecase.WalletRegisterTransactionUC
+	// RegisterTransaction *usecase.WalletRegisterTransactionUC
 	proto.UnimplementedWalletServiceServer
 }
 
@@ -24,14 +22,14 @@ func NewGrpcService(createUC *usecase.WalletCreateUC,
 	creditUC *usecase.WalletCreditUC,
 	debitUC *usecase.WalletDebitUC,
 	getByAccountUC *usecase.WalletGetByAccountUC,
-	registerTransaction *usecase.WalletRegisterTransactionUC,
+	// registerTransaction *usecase.WalletRegisterTransactionUC,
 ) *GrpcService {
 	return &GrpcService{
 		CreateUC:            createUC,
 		CreditUC:            creditUC,
 		DebitUC:             debitUC,
 		GetByAccountUC:      getByAccountUC,
-		RegisterTransaction: registerTransaction,
+		// RegisterTransaction: registerTransaction,
 	}
 }
 
@@ -143,20 +141,20 @@ func (s *GrpcService) GetWalletByAccount(ctx context.Context, in *proto.ParamGet
 	return &out, nil
 }
 
-func (s *GrpcService) CreateTransaction(ctx context.Context, in *proto.ParamCreateTransactionRequest,
-) (*proto.ParamCreateTransactionResponse, error) {
+// func (s *GrpcService) CreateTransaction(ctx context.Context, in *proto.ParamCreateTransactionRequest,
+// ) (*proto.ParamCreateTransactionResponse, error) {
 
-	p := usecase.ParamRegisterTransactionInput{
-		ReferenceId: in.ReferenceId,
-	}
+// 	p := usecase.ParamRegisterTransactionInput{
+// 		ReferenceId: in.ReferenceId,
+// 	}
 
-	if err := p.Validate(); err != nil {
-		return nil, status.Error(codes.InvalidArgument, err.Error())
-	}
+// 	if err := p.Validate(); err != nil {
+// 		return nil, status.Error(codes.InvalidArgument, err.Error())
+// 	}
 
-	if err := s.RegisterTransaction.Execute(ctx, &p); err != nil {
-		return nil, status.Error(codes.AlreadyExists, err.Error())
-	}
+// 	if err := s.RegisterTransaction.Execute(ctx, &p); err != nil {
+// 		return nil, status.Error(codes.AlreadyExists, err.Error())
+// 	}
 
-	return &proto.ParamCreateTransactionResponse{}, nil
-}
+// 	return &proto.ParamCreateTransactionResponse{}, nil
+// }
