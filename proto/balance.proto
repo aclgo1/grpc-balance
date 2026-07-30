@@ -18,7 +18,7 @@ message ParamCreateWalletResponse {
 
 message ParamCreditWalletRequest {
     string walletID = 1;
-    double amount = 2;
+    int64 amount = 2;
 }
 
 message ParamCreditWalletResponse {

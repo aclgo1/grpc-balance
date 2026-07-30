@@ -145,7 +145,7 @@ func (x *ParamCreateWalletResponse) GetUpdatedAT() *timestamppb.Timestamp {
 type ParamCreditWalletRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	WalletID      string                 `protobuf:"bytes,1,opt,name=walletID,proto3" json:"walletID,omitempty"`
-	Amount        float64                `protobuf:"fixed64,2,opt,name=amount,proto3" json:"amount,omitempty"`
+	Amount        int64                  `protobuf:"varint,2,opt,name=amount,proto3" json:"amount,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -187,7 +187,7 @@ func (x *ParamCreditWalletRequest) GetWalletID() string {
 	return ""
 }
 
-func (x *ParamCreditWalletRequest) GetAmount() float64 {
+func (x *ParamCreditWalletRequest) GetAmount() int64 {
 	if x != nil {
 		return x.Amount
 	}
@@ -613,7 +613,7 @@ const file_balance_proto_rawDesc = "" +
 	"\tupdatedAT\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAT\"N\n" +
 	"\x18ParamCreditWalletRequest\x12\x1a\n" +
 	"\bwalletID\x18\x01 \x01(\tR\bwalletID\x12\x16\n" +
-	"\x06amount\x18\x02 \x01(\x01R\x06amount\"\xe3\x01\n" +
+	"\x06amount\x18\x02 \x01(\x03R\x06amount\"\xe3\x01\n" +
 	"\x19ParamCreditWalletResponse\x12\x1a\n" +
 	"\bwalletID\x18\x01 \x01(\tR\bwalletID\x12\x1c\n" +
 	"\taccountID\x18\x02 \x01(\tR\taccountID\x12\x18\n" +
