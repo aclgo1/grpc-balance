@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
 
 	"github.com/aclgo/balance/entity"
 	"go.mongodb.org/mongo-driver/bson"
@@ -302,34 +301,7 @@ func(m *MongoRepository) AuditWallet(ctx context.Context, param *entity.ParamAud
 
 }
 
-func (m *MongoRepository)ReconcileWallet(ctx context.Context, param *entity.ParamReconcile)error{
-	report, err := m.AuditWallet(ctx,&entity.ParamAuditWallet{WalletId: param.WalletId})
-	if err != nil {
-		return fmt.Errorf("failed audit to reconcile: %w",err)
-	}
 
-	if report.IsConsistent{
-		return nil
-	}
-
-	adjustmentAmount := -report.Difference
-
-	refID := fmt.Sprintf("RECONCILE_%s_%s_%d", param.WalletId,param.Operator, time.Now().UnixNano())
-	
-	entry := &entity.ParamLedgerEntry{
-		ReferenceId: refID,
-		WalletId:    param.WalletId,
-		Amount:      adjustmentAmount, 
-		CreatedAt:   time.Now(),
-	}
-
-	_, err = m.ProcessLedgerEntry(ctx,entry)
-	if err != nil {
-		return fmt.Errorf("error aplicate reconcile: %w",err)
-	}
-
-	return nil
-}
 
 // func (m *MongoRepository) RegisterTransaction(ctx context.Context, param *entity.ParamRegisterTransaction) error {
 // 	tx := bson.M{

@@ -65,6 +65,7 @@ func (s *GrpcService) Credit(ctx context.Context, in *proto.ParamCreditWalletReq
 	p := usecase.ParamCreditInput{
 		WalletID: in.WalletID,
 		Amount:   in.Amount,
+		ReferenceId: in.ReferenceID,
 	}
 
 	if err := p.Validate(); err != nil {
@@ -92,6 +93,7 @@ func (s *GrpcService) Debit(ctx context.Context, in *proto.ParamDebitWalletReque
 	p := usecase.ParamDebitInput{
 		WalletID: in.WalletID,
 		Amount:   in.Amount,
+		ReferenceId: in.ReferenceID,
 	}
 
 	if err := p.Validate(); err != nil {
