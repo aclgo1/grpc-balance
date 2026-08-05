@@ -23,7 +23,7 @@ func NewWalletDebitUC(repo entity.EntityRepository, mu *sync.Mutex) *WalletDebit
 type ParamDebitInput struct {
 	WalletID string
 	ReferenceId string
-	Amount   float64
+	Amount   int64
 }
 
 func (p *ParamDebitInput) Validate() error {

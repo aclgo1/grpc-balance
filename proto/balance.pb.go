@@ -282,7 +282,7 @@ type ParamDebitWalletRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	WalletID      string                 `protobuf:"bytes,1,opt,name=walletID,proto3" json:"walletID,omitempty"`
 	ReferenceID   string                 `protobuf:"bytes,2,opt,name=referenceID,proto3" json:"referenceID,omitempty"`
-	Amount        float64                `protobuf:"fixed64,3,opt,name=amount,proto3" json:"amount,omitempty"`
+	Amount        int64                  `protobuf:"varint,3,opt,name=amount,proto3" json:"amount,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -331,7 +331,7 @@ func (x *ParamDebitWalletRequest) GetReferenceID() string {
 	return ""
 }
 
-func (x *ParamDebitWalletRequest) GetAmount() float64 {
+func (x *ParamDebitWalletRequest) GetAmount() int64 {
 	if x != nil {
 		return x.Amount
 	}
@@ -560,7 +560,7 @@ const file_balance_proto_rawDesc = "" +
 	"\x17ParamDebitWalletRequest\x12\x1a\n" +
 	"\bwalletID\x18\x01 \x01(\tR\bwalletID\x12 \n" +
 	"\vreferenceID\x18\x02 \x01(\tR\vreferenceID\x12\x16\n" +
-	"\x06amount\x18\x03 \x01(\x01R\x06amount\"\xe2\x01\n" +
+	"\x06amount\x18\x03 \x01(\x03R\x06amount\"\xe2\x01\n" +
 	"\x18ParamDebitWalletResponse\x12\x1a\n" +
 	"\bwalletID\x18\x01 \x01(\tR\bwalletID\x12\x1c\n" +
 	"\taccountID\x18\x02 \x01(\tR\taccountID\x12\x18\n" +

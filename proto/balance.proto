@@ -33,7 +33,7 @@ message ParamCreditWalletResponse {
 message ParamDebitWalletRequest {
     string walletID = 1;
     string referenceID = 2;
-    double amount = 3;
+    int64 amount = 3;
 }
 
 message ParamDebitWalletResponse {
@@ -55,9 +55,6 @@ message ParamgGetWalletByAccountResponse {
     google.protobuf.Timestamp createdAT = 4;
     google.protobuf.Timestamp updatedAT = 5;
 }
-
-
-
 
 service WalletService {
     rpc Create(ParamCreateWalletRequest) returns (ParamCreateWalletResponse);
